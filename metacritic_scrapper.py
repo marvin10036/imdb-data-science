@@ -149,10 +149,10 @@ def get_metacritic_page_from_imdb_db_id(db_id: str):
 
     metacritic_movie_name = metacritic_general_url.split("?")[0].split("https://www.metacritic.com/movie/")[1]
 
-    return f"https://www.metacritic.com/movie/{metacritic_movie_name}/critic-reviews/"
+    return metacritic_movie_name, f"https://www.metacritic.com/movie/{metacritic_movie_name}/critic-reviews/"
 
 
 def get_metacritic_critic_scores_from_id(imdb_id: str):
-    metacritic_page_url = get_metacritic_page_from_imdb_db_id(imdb_id)
+    metacritic_movie_name, metacritic_page_url = get_metacritic_page_from_imdb_db_id(imdb_id)
 
-    return get_metacritic_critic_scores(metacritic_page_url)
+    return metacritic_movie_name, get_metacritic_critic_scores(metacritic_page_url)
