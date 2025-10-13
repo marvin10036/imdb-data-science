@@ -11,7 +11,7 @@ def fetch_one(imdb_id: str):
     return imdb_id, name, scores
 
 if __name__ == "__main__":
-    ids = ["tt7130300", "tt0111161", "tt0068646", "tt0468569", "tt0071562"]
+    ids = ["tt7130300", "tt0111161", "tt0068646", "tt0468569", "tt0071562", "tt0050083", "tt0167260", "tt0108052", "tt0120737", "tt0110912", "tt0060196", "tt0109830", "tt0167261", "tt0137523", "tt1375666", "tt0080684"]
 
     scores_by_film = {}
     # Ajuste o max_workers se o site for sensível a carga; 4–8 costuma ser seguro para scraping
