@@ -1,0 +1,69 @@
+graph LR
+    %% ========================================
+    %% ARQUITETURA ML: Feature Engineering Pipeline
+    %% ========================================
+    
+    subgraph INPUT["📥 INPUT LAYER"]
+        raw_movies["🎬 Movies<br/>────────<br/>• imdb_rating<br/>• imdb_votes<br/>• release_year"]
+        raw_box["💰 Box Office<br/>────────<br/>• budget<br/>• worldwide_gross<br/>• domestic_gross"]
+    end
+    
+    subgraph FEATURES["⚙️ FEATURE ENGINEERING"]
+        direction TB
+        
+        basic["<b>BASIC FEATURES</b><br/>═══════════════<br/>Direto das tabelas<br/>sem transformação"]
+        
+        derived["<b>DERIVED FEATURES</b><br/>═══════════════<br/><b>1. ROI</b><br/>worldwide_gross / budget<br/>────────<br/><b>2. US Market Share</b><br/>domestic_gross / worldwide_gross<br/>────────<br/><b>3. Box Office Rank</b><br/>RANK() OVER (PARTITION BY year)<br/>────────<br/><b>4. Votes Z-Score</b><br/>(votes - μ_year) / σ_year<br/>────────<br/><b>5. Rating Z-Score</b><br/>(rating - μ_year) / σ_year"]
+        
+        aggregated["<b>AGGREGATED FEATURES</b><br/>═══════════════<br/>Estatísticas Metacritic:<br/>• mean_score<br/>• median_score<br/>• stddev_score<br/>• p90_score"]
+        
+        counts["<b>COUNT FEATURES</b><br/>═══════════════<br/>• num_genres<br/>• num_countries<br/>• num_languages<br/>• num_directors<br/>• num_writers<br/>• num_cast"]
+    end
+    
+    subgraph NORMALIZATION["🔄 NORMALIZATION"]
+        window["<b>WINDOW FUNCTIONS</b><br/>═══════════════<br/>PARTITION BY release_year<br/>────────<br/>• AVG()<br/>• STDDEV()<br/>• RANK()"]
+    end
+    
+    subgraph OUTPUT["📊 OUTPUT"]
+        ml_ready["<b>ML_TRAINING_DATASET</b><br/>════════════════<br/>29 Features + 1 Label<br/>────────<br/>✅ Pronto para ML<br/>✅ Normalizado<br/>✅ Features derivadas<br/>✅ Sem duplicação"]
+    end
+    
+    subgraph TARGET["🎯 TARGET VARIABLE"]
+        label["<b>LABEL</b><br/>════════<br/>nominated_oscar::INT<br/>────────<br/>0 = Não indicado<br/>1 = Indicado<br/>────────<br/>Desbalanceado:<br/>186 indicados (5.8%)<br/>2,995 não (94.2%)"]
+    end
+    
+    %% ========================================
+    %% FLUXO
+    %% ========================================
+    
+    raw_movies --> basic
+    raw_box --> basic
+    
+    raw_movies --> derived
+    raw_box --> derived
+    
+    raw_movies --> window
+    window --> derived
+    
+    basic --> ml_ready
+    derived --> ml_ready
+    aggregated --> ml_ready
+    counts --> ml_ready
+    
+    ml_ready --> label
+    
+    %% ========================================
+    %% ESTILOS
+    %% ========================================
+    
+    classDef inputClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef featureClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef normalClass fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef outputClass fill:#e8f5e9,stroke:#388e3c,stroke-width:3px
+    classDef targetClass fill:#ffebee,stroke:#c62828,stroke-width:2px
+    
+    class raw_movies,raw_box inputClass
+    class basic,derived,aggregated,counts featureClass
+    class window normalClass
+    class ml_ready outputClass
+    class label targetClass

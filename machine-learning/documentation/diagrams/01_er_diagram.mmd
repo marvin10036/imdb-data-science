@@ -1,0 +1,114 @@
+erDiagram
+    %% ========================================
+    %% BANCO DE DADOS: Oscar Movie Prediction
+    %% Diagrama Entity-Relationship (ER)
+    %% ========================================
+    
+    %% Tabela Central: Movies
+    MOVIES {
+        varchar_15 imdb_id PK "IMDb ID (chave primária)"
+        text original_title "Título original"
+        text br_title "Título BR (opcional)"
+        int release_year "Ano de lançamento"
+        decimal_3_1 imdb_rating "Rating IMDb (0-10)"
+        int imdb_votes "Número de votos IMDb"
+        int runtime_minutes "Duração em minutos"
+        boolean nominated_oscar "Indicado ao Oscar?"
+        boolean won_oscar "Ganhou Oscar?"
+        int oscar_ceremony_year "Ano da cerimônia"
+        text oscar_status "Status no Oscar"
+        int metascore "Metascore (0-100)"
+        text synopsis "Sinopse"
+    }
+    
+    %% Tabela: Box Office
+    MOVIE_BOX_OFFICE {
+        varchar_15 movie_id PK,FK "Referência ao filme"
+        numeric_18_2 budget "Orçamento (USD)"
+        numeric_18_2 worldwide_gross "Bilheteria mundial (USD)"
+        numeric_18_2 domestic_gross "Bilheteria doméstica/EUA (USD)"
+    }
+    
+    %% Tabela: Genres
+    GENRES {
+        serial id PK "ID do gênero"
+        text name UK "Nome do gênero (único)"
+    }
+    
+    %% Tabela: Movie-Genres (N:N)
+    MOVIE_GENRES {
+        varchar_15 movie_id PK,FK "ID do filme"
+        int genre_id PK,FK "ID do gênero"
+    }
+    
+    %% Tabela: People
+    PEOPLE {
+        serial id PK "ID da pessoa"
+        text name UK "Nome (único)"
+    }
+    
+    %% Tabela: Movie-People (N:N com role)
+    MOVIE_PEOPLE {
+        varchar_15 movie_id PK,FK "ID do filme"
+        int person_id PK,FK "ID da pessoa"
+        enum role PK "Papel: director/writer/cast"
+        int cast_order "Ordem no elenco (opcional)"
+    }
+    
+    %% Tabela: Countries
+    COUNTRIES {
+        serial id PK "ID do país"
+        text name UK "Nome do país (único)"
+    }
+    
+    %% Tabela: Movie-Countries (N:N)
+    MOVIE_COUNTRIES {
+        varchar_15 movie_id PK,FK "ID do filme"
+        int country_id PK,FK "ID do país"
+    }
+    
+    %% Tabela: Languages
+    LANGUAGES {
+        serial id PK "ID do idioma"
+        text name UK "Nome do idioma (único)"
+    }
+    
+    %% Tabela: Movie-Languages (N:N)
+    MOVIE_LANGUAGES {
+        varchar_15 movie_id PK,FK "ID do filme"
+        int language_id PK,FK "ID do idioma"
+    }
+    
+    %% Tabela: Rating Samples (Metacritic)
+    RATING_SAMPLES {
+        serial id PK "ID da amostra"
+        varchar_15 movie_id FK "ID do filme"
+        smallint score_value "Valor do score (0-100)"
+        int sample_index "Índice da amostra"
+    }
+    
+    %% ========================================
+    %% RELACIONAMENTOS (Cardinalidade)
+    %% ========================================
+    
+    %% Movies ↔ Box Office (1:1)
+    MOVIES ||--o| MOVIE_BOX_OFFICE : "tem dados de"
+    
+    %% Movies ↔ Genres (N:N)
+    MOVIES ||--o{ MOVIE_GENRES : "possui"
+    GENRES ||--o{ MOVIE_GENRES : "categoriza"
+    
+    %% Movies ↔ People (N:N com role)
+    MOVIES ||--o{ MOVIE_PEOPLE : "envolve"
+    PEOPLE ||--o{ MOVIE_PEOPLE : "trabalha em"
+    
+    %% Movies ↔ Countries (N:N)
+    MOVIES ||--o{ MOVIE_COUNTRIES : "produzido em"
+    COUNTRIES ||--o{ MOVIE_COUNTRIES : "produz"
+    
+    %% Movies ↔ Languages (N:N)
+    MOVIES ||--o{ MOVIE_LANGUAGES : "falado em"
+    LANGUAGES ||--o{ MOVIE_LANGUAGES : "usado em"
+    
+    %% Movies ↔ Rating Samples (1:N)
+    MOVIES ||--o{ RATING_SAMPLES : "tem avaliações"

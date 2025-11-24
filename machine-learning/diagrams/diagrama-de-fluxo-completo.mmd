@@ -1,0 +1,67 @@
+flowchart LR
+  subgraph Sources[Fontes]
+    A[IMDb Non-Commercial TSVs: title.basics, title.ratings, title.akas, title.crew, title.principals, etc.]
+    B[IMDbAPI: orçamento, bilheteria, metascore agregado]
+    C[Metacritic Crawler: lista de notas por crítico/filme]
+  end
+
+  subgraph Extract[Extração]
+    E1[Parser TSV Ruby project → DB Staging ou CSVs]
+    E2[IMDbAPI Client → JSON/CSV]
+    E3[Crawler Metacritic → JSON: ttid → scores]
+  end
+
+  subgraph Stage[Staging / Bronze]
+    S1[(Raw TSV limpos)]
+    S2[(JSON/CSV IMDbAPI)]
+    S3[(JSON Metacritic por filme)]
+  end
+
+  subgraph Transform[Transformações / Silver]
+    T1[Limpeza & Tipagem: datas, números, normalização de nomes]
+    T2[Deduplicação & Join por tconst ttid]
+    T3[Derivados iniciais: ano cerimônia, status oscar, flags indic/vencedor]
+    T4[Agregações Metacritic: média, mediana, desvio, IQR, N_críticos]
+    T5[Seleção de campos para análise/modelo]
+  end
+
+  subgraph Curated[Curated / Gold / Consumo]
+    G1[(Tabelas Relacionais Postgres: Film, People, Genres, Countries, Awards, BoxOffice, MetacriticAgg, MetacriticScores)]
+    G2[(Parquet/CSV para EDA e modelagem local com DuckDB/Polars)]
+  end
+
+  subgraph Analytics[EDA & Modelagem]
+    A1[EDA: distribuições, correlações, ausência, drift temporal]
+    A2[Features: one-hot gêneros, centralidade diretor/elenco, inflation-adjusted box office, votos/log, runtime, países/idiomas]
+    A3[Split temporal: treina anos passados → testa anos recentes]
+    A4[Modelos: baseline logística, árvore/GBM, calibração, métricas F1/PR-AUC, SHAP]
+    A5[Insight sobre fatores de indicação ao Oscar]
+  end
+
+  Sources --> Extract --> Stage --> Transform --> Curated --> Analytics
+
+  B --> E2
+  C --> E3
+  A --> E1
+
+  E1 --> S1
+  E2 --> S2
+  E3 --> S3
+
+  S1 --> T1
+  S2 --> T1
+  S3 --> T1
+  T1 --> T2
+  T2 --> T3
+  T2 --> T4
+  T3 --> T5
+  T4 --> T5
+  T5 --> G1
+  T5 --> G2
+
+  G1 --> A1
+  G2 --> A1
+  A1 --> A2 --> A3 --> A4 --> A5
+
+
+  

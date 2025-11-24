@@ -1,0 +1,71 @@
+graph TB
+    %% ========================================
+    %% FLUXO DE DADOS: Views e Agregações
+    %% Data Pipeline Architecture
+    %% ========================================
+    
+    subgraph RAW["📦 CAMADA RAW (Tabelas Fonte)"]
+        movies["🎬 MOVIES<br/>Dados principais<br/>(3,181 filmes)"]
+        box_office["💰 MOVIE_BOX_OFFICE<br/>Budget & Gross<br/>(1:1 com movies)"]
+        rating_samples["⭐ RATING_SAMPLES<br/>Scores Metacritic<br/>(amostras individuais)"]
+        genres["🎭 GENRES<br/>Gêneros<br/>(22 categorias)"]
+        people["👥 PEOPLE<br/>Pessoas<br/>(10,758 registros)"]
+        countries["🌍 COUNTRIES<br/>Países<br/>(88 países)"]
+        languages["🗣️ LANGUAGES<br/>Idiomas<br/>(132 idiomas)"]
+        
+        %% Tabelas de relacionamento N:N
+        movie_genres["MOVIE_GENRES<br/>(8,560 relações)"]
+        movie_people["MOVIE_PEOPLE<br/>(27,290 relações)"]
+        movie_countries["MOVIE_COUNTRIES<br/>(6,469 relações)"]
+        movie_languages["MOVIE_LANGUAGES<br/>(6,151 relações)"]
+    end
+    
+    subgraph AGG["🔄 CAMADA AGREGADA (Views Intermediárias)"]
+        rating_stats["📊 MOVIE_RATING_STATS<br/><b>View de Agregação</b><br/>────────────────<br/>• n_samples<br/>• mean_score<br/>• median_score<br/>• stddev_score<br/>• p90_score<br/>• min/max_score<br/>────────────────<br/>(Agregação por filme)"]
+    end
+    
+    subgraph ML["🤖 CAMADA ML (Dataset Final)"]
+        ml_dataset["🎯 ML_TRAINING_DATASET<br/><b>View Principal de ML</b><br/>════════════════════<br/><b>FEATURES BÁSICAS (10):</b><br/>• imdb_id, title, year<br/>• imdb_rating, imdb_votes<br/>• runtime_minutes<br/>• metascore<br/>• budget, worldwide_gross<br/>• domestic_gross<br/>────────────────<br/><b>FEATURES DERIVADAS (5):</b><br/>• roi_worldwide<br/>• us_market_share<br/>• box_office_rank_in_year<br/>• votes_normalized_by_year<br/>• rating_normalized_by_year<br/>────────────────<br/><b>STATS METACRITIC (7):</b><br/>• n_samples, mean_score<br/>• median_score, stddev_score<br/>• p90_score, min/max_score<br/>────────────────<br/><b>CONTAGENS (6):</b><br/>• num_genres<br/>• num_countries<br/>• num_languages<br/>• num_directors<br/>• num_writers<br/>• num_cast<br/>────────────────<br/><b>LABEL (1):</b><br/>• label (0=não indicado, 1=indicado)<br/>════════════════════<br/><b>TOTAL: 29 colunas</b>"]
+    end
+    
+    subgraph OUTPUT["📤 SAÍDA (Consumo)"]
+        python["🐍 Python/Pandas<br/>Notebooks de ML<br/>load_ml_dataset()"]
+        export["💾 CSV Export<br/>data/processed/<br/>final_dataset.csv"]
+    end
+    
+    %% ========================================
+    %% FLUXO DE DADOS (Dependências)
+    %% ========================================
+    
+    %% RAW → AGG
+    movies --> rating_stats
+    rating_samples --> rating_stats
+    
+    %% RAW → ML
+    movies --> ml_dataset
+    box_office --> ml_dataset
+    rating_stats --> ml_dataset
+    
+    %% Subqueries de contagem
+    movie_genres -.->|"COUNT(*)"| ml_dataset
+    movie_countries -.->|"COUNT(*)"| ml_dataset
+    movie_languages -.->|"COUNT(*)"| ml_dataset
+    movie_people -.->|"COUNT(*)<br/>por role"| ml_dataset
+    
+    %% ML → OUTPUT
+    ml_dataset --> python
+    ml_dataset --> export
+    
+    %% ========================================
+    %% LEGENDAS
+    %% ========================================
+    
+    classDef rawTable fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef aggView fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef mlView fill:#e8f5e9,stroke:#388e3c,stroke-width:3px
+    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class movies,box_office,rating_samples,genres,people,countries,languages,movie_genres,movie_people,movie_countries,movie_languages rawTable
+    class rating_stats aggView
+    class ml_dataset mlView
+    class python,export output

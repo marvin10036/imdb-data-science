@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Logs
+logs/*.log
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Archives (optional - uncomment if you don't want to track)
+# data/archives/*.zip
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,297 @@
+# Directory Structure Documentation
+
+This document describes the organization of the IMDb Data Science project.
+
+## Overview
+
+The project is organized into logical directories separating code, data, documentation, and outputs. This structure makes the codebase easier to maintain, test, and understand.
+
+## Directory Layout
+
+```
+imdb-data-science/
+├── README.md                    # Main project documentation
+├── requirements.txt             # Python dependencies
+├── .gitignore                   # Git ignore patterns
+├── docs/                        # Documentation files
+├── notebooks/                   # Jupyter notebooks for analysis
+├── src/                         # Source code organized by function
+├── scripts/                     # Executable scripts
+├── data/                        # Data files (raw, processed, errors, archives)
+├── outputs/                     # Generated outputs (figures, reports)
+├── tests/                       # Unit and integration tests
+└── logs/                        # Execution logs
+```
+
+## Directory Details
+
+### Root Level
+
+**README.md**
+
+- Main project documentation
+- Overview, setup instructions, and usage examples
+
+**requirements.txt**
+
+- Python package dependencies
+- Install with: `pip install -r requirements.txt`
+
+**.gitignore**
+
+- Specifies files to exclude from version control
+- Configured to ignore large data files, logs, and Python cache
+
+---
+
+### docs/
+
+Documentation files for the project.
+
+**Contents:**
+
+- `DB_UNIFIER_GUIDE.md` - Guide for using the database unifier script
+- `directory_structure.md` - This file
+
+**Purpose:** Keep all documentation in one place for easy reference.
+
+---
+
+### notebooks/
+
+Jupyter notebooks for exploratory analysis and visualization.
+
+**Contents:**
+
+- `01_exploratory_analysis.ipynb` - Initial data exploration
+
+**Naming Convention:** Notebooks are numbered by execution order (01*, 02*, etc.)
+
+**Purpose:** Interactive analysis, experimentation, and prototyping.
+
+---
+
+### src/
+
+Source code organized into subpackages by function.
+
+**Structure:**
+
+```
+src/
+├── __init__.py              # Makes src a Python package
+├── scrapers/                # Web scraping modules
+│   ├── __init__.py
+│   └── metacritic_scraper.py
+├── processors/              # Data processing modules
+│   ├── __init__.py
+│   └── scores_processor.py
+├── database/                # Database-related scripts
+│   ├── __init__.py
+│   └── db_unifier.py
+└── utils/                   # Utility functions
+    └── __init__.py
+```
+
+**scrapers/**
+
+- Web scraping functionality
+- `metacritic_scraper.py` - Scrapes movie scores from Metacritic
+
+**processors/**
+
+- Data transformation and processing
+- `scores_processor.py` - Processes and analyzes score data
+
+**database/**
+
+- Database operations and data collection
+- `db_unifier.py` - Main script to collect and unify movie scores
+
+**utils/**
+
+- Shared utility functions
+- Currently empty, ready for future additions
+
+**Purpose:** Organized, reusable code modules that can be imported throughout the project.
+
+---
+
+### scripts/
+
+Executable scripts that use the src modules.
+
+**Contents:**
+
+- `main.py` - Main execution script for score collection
+
+**Usage:**
+
+```bash
+python scripts/main.py
+```
+
+**Purpose:** Entry points for running project workflows. Scripts import from `src/` packages.
+
+---
+
+### data/
+
+All data files organized by stage and type.
+
+**Structure:**
+
+```
+data/
+├── raw/                     # Original, unmodified data
+├── processed/               # Processed and cleaned data
+├── errors/                  # Error tracking files
+└── archives/                # Compressed archives
+```
+
+**raw/**
+
+- Original data files, never modified
+- `movies_catalog_oscar_and_popular_2000_2025.csv` - Source movie catalog
+
+**processed/**
+
+- Data that has been transformed or enriched
+- `movie_scores.json` - Collected movie scores
+- `movies_scores_minify.json` - Minified version of scores
+- `movie_scores_from_error_list.json` - Recovered scores from retry
+
+**errors/**
+
+- Files tracking processing errors
+- `error_list.json` - List of movies that failed processing
+- `error_list_from_error_list.json` - Errors from retry attempts
+
+**archives/**
+
+- Compressed files and backups
+- `imdb-rails.zip` - Rails project archive
+- `extractor_imdb.zip` - IMDb extractor archive
+
+**Purpose:** Clear separation of data by processing stage, making it easy to track data flow.
+
+---
+
+### outputs/
+
+Generated analysis outputs.
+
+**Structure:**
+
+```
+outputs/
+├── figures/                 # Generated plots and visualizations
+└── reports/                 # Generated reports and summaries
+```
+
+**Purpose:** Store analysis results separately from source data. Currently empty.
+
+---
+
+### tests/
+
+Unit and integration tests for the project.
+
+**Structure:**
+
+```
+tests/
+└── __init__.py
+```
+
+**Purpose:** Test coverage for source code modules. Currently empty, ready for test implementation.
+
+---
+
+### logs/
+
+Execution logs from scripts.
+
+**Contents:**
+
+- Log files generated by `db_unifier.py` with timestamp naming
+- Format: `db_unifier_YYYYMMDD_HHMMSS.log`
+
+**Purpose:** Track script execution, errors, and debugging information.
+
+---
+
+## Import Conventions
+
+Since `src/` is organized as a Python package, imports should use the full package path:
+
+```python
+# Import from scrapers
+from src.scrapers.metacritic_scraper import get_metacritic_critic_scores_from_id
+
+# Import from processors
+from src.processors.scores_processor import features_from_scores_map
+
+# Import from database
+from src.database.db_unifier import get_all_movies_scores
+```
+
+## Running Scripts
+
+Scripts should be run from the project root directory:
+
+```bash
+# From project root
+python scripts/main.py
+
+# Run database unifier
+python -m src.database.db_unifier
+
+# Run with retry mode
+python -m src.database.db_unifier --retry-errors
+```
+
+## Git Ignore Strategy
+
+The `.gitignore` file is configured to:
+
+- Exclude all data files in `data/raw/`, `data/processed/`, and `data/errors/`
+- Exclude log files in `logs/`
+- Exclude Python cache (`__pycache__/`, `*.pyc`)
+- Exclude virtual environments (`.venv/`, `venv/`)
+- Exclude Jupyter notebook checkpoints
+
+This keeps the repository clean while preserving the directory structure.
+
+## Adding New Components
+
+**New scraper:**
+
+1. Add to `src/scrapers/`
+2. Import in `src/scrapers/__init__.py` if needed
+3. Create corresponding tests in `tests/test_scrapers.py`
+
+**New processor:**
+
+1. Add to `src/processors/`
+2. Import in `src/processors/__init__.py` if needed
+3. Create corresponding tests in `tests/test_processors.py`
+
+**New notebook:**
+
+1. Add to `notebooks/` with numbered prefix
+2. Use descriptive name indicating purpose
+
+**New data source:**
+
+1. Place in `data/raw/`
+2. Document in README.md or in `docs/`
+
+## Benefits of This Structure
+
+1. **Clear separation of concerns** - Code, data, docs, and outputs are isolated
+2. **Scalable** - Easy to add new modules without cluttering
+3. **Professional** - Follows Python best practices for package structure
+4. **Maintainable** - Easy to find and update specific components
+5. **Testable** - Clear structure supports comprehensive testing
+6. **Version control friendly** - Sensitive data and outputs excluded from git
