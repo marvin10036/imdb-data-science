@@ -3,7 +3,7 @@ from typing import Dict, Sequence, List, Tuple
 import math
 import numpy as np
 import pandas as pd
-from metacritic_scrapper import get_metacritic_critic_scores_from_id
+from src.scrapers.metacritic_scraper import get_metacritic_critic_scores_from_id
 
 # ---------- utilidades robustas ----------
 
