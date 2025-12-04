@@ -16,6 +16,9 @@ logs/*.log
 notebooks/.ipynb_checkpoints/
 *.ipynb_checkpoints
 
+/machine-learning/notebooks/catboost_info/
+/machine-learning/reports/figures/*
+
 # Archives (optional - uncomment if you don't want to track)
 # data/archives/*.zip
 
@@ -26,3 +29,6 @@ notebooks/.ipynb_checkpoints/
 # OS
 .DS_Store
 Thumbs.db
+
+# ML Artifacts
+catboost_info/
