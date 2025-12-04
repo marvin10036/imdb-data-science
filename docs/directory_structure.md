@@ -1,297 +1,297 @@
-# Directory Structure Documentation
+# Documentação da Estrutura de Diretórios
 
-This document describes the organization of the IMDb Data Science project.
+Este documento descreve a organização do projeto IMDb Data Science.
 
-## Overview
+## Visão Geral
 
-The project is organized into logical directories separating code, data, documentation, and outputs. This structure makes the codebase easier to maintain, test, and understand.
+O projeto está organizado em diretórios lógicos separando código, dados, documentação e saídas. Esta estrutura torna a base de código mais fácil de manter, testar e entender.
 
-## Directory Layout
+## Layout do Diretório
 
 ```
 imdb-data-science/
-├── README.md                    # Main project documentation
-├── requirements.txt             # Python dependencies
-├── .gitignore                   # Git ignore patterns
-├── docs/                        # Documentation files
-├── notebooks/                   # Jupyter notebooks for analysis
-├── src/                         # Source code organized by function
-├── scripts/                     # Executable scripts
-├── data/                        # Data files (raw, processed, errors, archives)
-├── outputs/                     # Generated outputs (figures, reports)
-├── tests/                       # Unit and integration tests
-└── logs/                        # Execution logs
+├── README.md                    # Documentação principal do projeto
+├── requirements.txt             # Dependências Python
+├── .gitignore                   # Padrões de ignore do Git
+├── docs/                        # Arquivos de documentação
+├── notebooks/                   # Notebooks Jupyter para análise
+├── src/                         # Código fonte organizado por função
+├── scripts/                     # Scripts executáveis
+├── data/                        # Arquivos de dados (brutos, processados, erros, arquivos)
+├── outputs/                     # Saídas geradas (figuras, relatórios)
+├── tests/                       # Testes unitários e de integração
+└── logs/                        # Logs de execução
 ```
 
-## Directory Details
+## Detalhes do Diretório
 
-### Root Level
+### Nível Raiz
 
 **README.md**
 
-- Main project documentation
-- Overview, setup instructions, and usage examples
+- Documentação principal do projeto
+- Visão geral, instruções de configuração e exemplos de uso
 
 **requirements.txt**
 
-- Python package dependencies
-- Install with: `pip install -r requirements.txt`
+- Dependências de pacotes Python
+- Instalar com: `pip install -r requirements.txt`
 
 **.gitignore**
 
-- Specifies files to exclude from version control
-- Configured to ignore large data files, logs, and Python cache
+- Especifica arquivos a serem excluídos do controle de versão
+- Configurado para ignorar grandes arquivos de dados, logs e cache Python
 
 ---
 
 ### docs/
 
-Documentation files for the project.
+Arquivos de documentação do projeto.
 
-**Contents:**
+**Conteúdo:**
 
-- `DB_UNIFIER_GUIDE.md` - Guide for using the database unifier script
-- `directory_structure.md` - This file
+- `DB_UNIFIER_GUIDE.md` - Guia para usar o script unificador de banco de dados
+- `directory_structure.md` - Este arquivo
 
-**Purpose:** Keep all documentation in one place for easy reference.
+**Objetivo:** Manter toda a documentação em um só lugar para fácil referência.
 
 ---
 
 ### notebooks/
 
-Jupyter notebooks for exploratory analysis and visualization.
+Notebooks Jupyter para análise exploratória e visualização.
 
-**Contents:**
+**Conteúdo:**
 
-- `01_exploratory_analysis.ipynb` - Initial data exploration
+- `01_exploratory_analysis.ipynb` - Exploração inicial de dados
 
-**Naming Convention:** Notebooks are numbered by execution order (01*, 02*, etc.)
+**Convenção de Nomenclatura:** Notebooks são numerados por ordem de execução (01*, 02*, etc.)
 
-**Purpose:** Interactive analysis, experimentation, and prototyping.
+**Objetivo:** Análise interativa, experimentação e prototipagem.
 
 ---
 
 ### src/
 
-Source code organized into subpackages by function.
+Código fonte organizado em subpacotes por função.
 
-**Structure:**
+**Estrutura:**
 
 ```
 src/
-├── __init__.py              # Makes src a Python package
-├── scrapers/                # Web scraping modules
+├── __init__.py              # Torna src um pacote Python
+├── scrapers/                # Módulos de web scraping
 │   ├── __init__.py
 │   └── metacritic_scraper.py
-├── processors/              # Data processing modules
+├── processors/              # Módulos de processamento de dados
 │   ├── __init__.py
 │   └── scores_processor.py
-├── database/                # Database-related scripts
+├── database/                # Scripts relacionados a banco de dados
 │   ├── __init__.py
 │   └── db_unifier.py
-└── utils/                   # Utility functions
+└── utils/                   # Funções utilitárias
     └── __init__.py
 ```
 
 **scrapers/**
 
-- Web scraping functionality
-- `metacritic_scraper.py` - Scrapes movie scores from Metacritic
+- Funcionalidade de web scraping
+- `metacritic_scraper.py` - Coleta pontuações de filmes do Metacritic
 
 **processors/**
 
-- Data transformation and processing
-- `scores_processor.py` - Processes and analyzes score data
+- Transformação e processamento de dados
+- `scores_processor.py` - Processa e analisa dados de pontuação
 
 **database/**
 
-- Database operations and data collection
-- `db_unifier.py` - Main script to collect and unify movie scores
+- Operações de banco de dados e coleta de dados
+- `db_unifier.py` - Script principal para coletar e unificar pontuações de filmes
 
 **utils/**
 
-- Shared utility functions
-- Currently empty, ready for future additions
+- Funções utilitárias compartilhadas
+- Atualmente vazio, pronto para adições futuras
 
-**Purpose:** Organized, reusable code modules that can be imported throughout the project.
+**Objetivo:** Módulos de código organizados e reutilizáveis que podem ser importados em todo o projeto.
 
 ---
 
 ### scripts/
 
-Executable scripts that use the src modules.
+Scripts executáveis que usam os módulos src.
 
-**Contents:**
+**Conteúdo:**
 
-- `main.py` - Main execution script for score collection
+- `main.py` - Script de execução principal para coleta de pontuações
 
-**Usage:**
+**Uso:**
 
 ```bash
 python scripts/main.py
 ```
 
-**Purpose:** Entry points for running project workflows. Scripts import from `src/` packages.
+**Objetivo:** Pontos de entrada para executar fluxos de trabalho do projeto. Scripts importam de pacotes `src/`.
 
 ---
 
 ### data/
 
-All data files organized by stage and type.
+Todos os arquivos de dados organizados por estágio e tipo.
 
-**Structure:**
+**Estrutura:**
 
 ```
 data/
-├── raw/                     # Original, unmodified data
-├── processed/               # Processed and cleaned data
-├── errors/                  # Error tracking files
-└── archives/                # Compressed archives
+├── raw/                     # Dados originais, não modificados
+├── processed/               # Dados processados e limpos
+├── errors/                  # Arquivos de rastreamento de erros
+└── archives/                # Arquivos compactados
 ```
 
 **raw/**
 
-- Original data files, never modified
-- `movies_catalog_oscar_and_popular_2000_2025.csv` - Source movie catalog
+- Arquivos de dados originais, nunca modificados
+- `movies_catalog_oscar_and_popular_2000_2025.csv` - Catálogo de filmes fonte
 
 **processed/**
 
-- Data that has been transformed or enriched
-- `movie_scores.json` - Collected movie scores
-- `movies_scores_minify.json` - Minified version of scores
-- `movie_scores_from_error_list.json` - Recovered scores from retry
+- Dados que foram transformados ou enriquecidos
+- `movie_scores.json` - Pontuações de filmes coletadas
+- `movies_scores_minify.json` - Versão minificada das pontuações
+- `movie_scores_from_error_list.json` - Pontuações recuperadas de novas tentativas
 
 **errors/**
 
-- Files tracking processing errors
-- `error_list.json` - List of movies that failed processing
-- `error_list_from_error_list.json` - Errors from retry attempts
+- Arquivos rastreando erros de processamento
+- `error_list.json` - Lista de filmes que falharam no processamento
+- `error_list_from_error_list.json` - Erros de tentativas de reprocessamento
 
 **archives/**
 
-- Compressed files and backups
-- `imdb-rails.zip` - Rails project archive
-- `extractor_imdb.zip` - IMDb extractor archive
+- Arquivos compactados e backups
+- `imdb-rails.zip` - Arquivo do projeto Rails
+- `extractor_imdb.zip` - Arquivo do extrator IMDb
 
-**Purpose:** Clear separation of data by processing stage, making it easy to track data flow.
+**Objetivo:** Separação clara de dados por estágio de processamento, facilitando o rastreamento do fluxo de dados.
 
 ---
 
 ### outputs/
 
-Generated analysis outputs.
+Saídas de análise geradas.
 
-**Structure:**
+**Estrutura:**
 
 ```
 outputs/
-├── figures/                 # Generated plots and visualizations
-└── reports/                 # Generated reports and summaries
+├── figures/                 # Gráficos e visualizações gerados
+└── reports/                 # Relatórios e resumos gerados
 ```
 
-**Purpose:** Store analysis results separately from source data. Currently empty.
+**Objetivo:** Armazenar resultados de análise separadamente dos dados fonte. Atualmente vazio.
 
 ---
 
 ### tests/
 
-Unit and integration tests for the project.
+Testes unitários e de integração para o projeto.
 
-**Structure:**
+**Estrutura:**
 
 ```
 tests/
 └── __init__.py
 ```
 
-**Purpose:** Test coverage for source code modules. Currently empty, ready for test implementation.
+**Objetivo:** Cobertura de testes para módulos de código fonte. Atualmente vazio, pronto para implementação de testes.
 
 ---
 
 ### logs/
 
-Execution logs from scripts.
+Logs de execução de scripts.
 
-**Contents:**
+**Conteúdo:**
 
-- Log files generated by `db_unifier.py` with timestamp naming
-- Format: `db_unifier_YYYYMMDD_HHMMSS.log`
+- Arquivos de log gerados por `db_unifier.py` com nomeação por timestamp
+- Formato: `db_unifier_YYYYMMDD_HHMMSS.log`
 
-**Purpose:** Track script execution, errors, and debugging information.
+**Objetivo:** Rastrear execução de scripts, erros e informações de depuração.
 
 ---
 
-## Import Conventions
+## Convenções de Importação
 
-Since `src/` is organized as a Python package, imports should use the full package path:
+Como `src/` é organizado como um pacote Python, as importações devem usar o caminho completo do pacote:
 
 ```python
-# Import from scrapers
+# Importar de scrapers
 from src.scrapers.metacritic_scraper import get_metacritic_critic_scores_from_id
 
-# Import from processors
+# Importar de processors
 from src.processors.scores_processor import features_from_scores_map
 
-# Import from database
+# Importar de database
 from src.database.db_unifier import get_all_movies_scores
 ```
 
-## Running Scripts
+## Executando Scripts
 
-Scripts should be run from the project root directory:
+Os scripts devem ser executados a partir do diretório raiz do projeto:
 
 ```bash
-# From project root
+# Da raiz do projeto
 python scripts/main.py
 
-# Run database unifier
+# Executar unificador de banco de dados
 python -m src.database.db_unifier
 
-# Run with retry mode
+# Executar com modo de nova tentativa (retry)
 python -m src.database.db_unifier --retry-errors
 ```
 
-## Git Ignore Strategy
+## Estratégia de Git Ignore
 
-The `.gitignore` file is configured to:
+O arquivo `.gitignore` está configurado para:
 
-- Exclude all data files in `data/raw/`, `data/processed/`, and `data/errors/`
-- Exclude log files in `logs/`
-- Exclude Python cache (`__pycache__/`, `*.pyc`)
-- Exclude virtual environments (`.venv/`, `venv/`)
-- Exclude Jupyter notebook checkpoints
+- Excluir todos os arquivos de dados em `data/raw/`, `data/processed/` e `data/errors/`
+- Excluir arquivos de log em `logs/`
+- Excluir cache Python (`__pycache__/`, `*.pyc`)
+- Excluir ambientes virtuais (`.venv/`, `venv/`)
+- Excluir checkpoints de notebooks Jupyter
 
-This keeps the repository clean while preserving the directory structure.
+Isso mantém o repositório limpo enquanto preserva a estrutura de diretórios.
 
-## Adding New Components
+## Adicionando Novos Componentes
 
-**New scraper:**
+**Novo scraper:**
 
-1. Add to `src/scrapers/`
-2. Import in `src/scrapers/__init__.py` if needed
-3. Create corresponding tests in `tests/test_scrapers.py`
+1. Adicionar em `src/scrapers/`
+2. Importar em `src/scrapers/__init__.py` se necessário
+3. Criar testes correspondentes em `tests/test_scrapers.py`
 
-**New processor:**
+**Novo processor:**
 
-1. Add to `src/processors/`
-2. Import in `src/processors/__init__.py` if needed
-3. Create corresponding tests in `tests/test_processors.py`
+1. Adicionar em `src/processors/`
+2. Importar em `src/processors/__init__.py` se necessário
+3. Criar testes correspondentes em `tests/test_processors.py`
 
-**New notebook:**
+**Novo notebook:**
 
-1. Add to `notebooks/` with numbered prefix
-2. Use descriptive name indicating purpose
+1. Adicionar em `notebooks/` com prefixo numerado
+2. Usar nome descritivo indicando o objetivo
 
-**New data source:**
+**Nova fonte de dados:**
 
-1. Place in `data/raw/`
-2. Document in README.md or in `docs/`
+1. Colocar em `data/raw/`
+2. Documentar no README.md ou em `docs/`
 
-## Benefits of This Structure
+## Benefícios Desta Estrutura
 
-1. **Clear separation of concerns** - Code, data, docs, and outputs are isolated
-2. **Scalable** - Easy to add new modules without cluttering
-3. **Professional** - Follows Python best practices for package structure
-4. **Maintainable** - Easy to find and update specific components
-5. **Testable** - Clear structure supports comprehensive testing
-6. **Version control friendly** - Sensitive data and outputs excluded from git
+1. **Separação clara de responsabilidades** - Código, dados, docs e saídas são isolados
+2. **Escalável** - Fácil de adicionar novos módulos sem bagunça
+3. **Profissional** - Segue as melhores práticas Python para estrutura de pacotes
+4. **Manutenível** - Fácil de encontrar e atualizar componentes específicos
+5. **Testável** - Estrutura clara suporta testes abrangentes
+6. **Amigável ao controle de versão** - Dados sensíveis e saídas excluídos do git
