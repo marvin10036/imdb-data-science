@@ -93,6 +93,31 @@ CREATE TABLE rating_samples (
     UNIQUE (movie_id, sample_index)
 );
 
+-- Estatísticas agregadas das amostras de nota (pré-calculadas para ML)
+CREATE TABLE rating_sample_features (
+    movie_id              VARCHAR(15) PRIMARY KEY REFERENCES movies (imdb_id) ON DELETE CASCADE,
+    sample_count          INT NOT NULL CHECK (sample_count >= 0),
+    mean_score            NUMERIC(10,4),
+    median_score          NUMERIC(10,4),
+    mode_score            SMALLINT,
+    mode_frequency        INT,
+    variance_score        NUMERIC(12,6),
+    stddev_score          NUMERIC(12,6),
+    geometric_mean_score  NUMERIC(12,6),
+    harmonic_mean_score   NUMERIC(12,6),
+    min_score             SMALLINT,
+    max_score             SMALLINT,
+    p10_score             NUMERIC(10,4),
+    p25_score             NUMERIC(10,4),
+    p75_score             NUMERIC(10,4),
+    p90_score             NUMERIC(10,4),
+    iqr_score             NUMERIC(10,4),
+    range_score           NUMERIC(10,4),
+    unique_scores         INT,
+    created_at            TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+COMMENT ON TABLE rating_sample_features IS 'Estatísticas agregadas das amostras de notas por filme (média, mediana, moda, variância, quantis, etc.)';
+
 -- Índices auxiliares para performance
 CREATE INDEX idx_movie_people_person ON movie_people (person_id);
 CREATE INDEX idx_movie_genres_genre ON movie_genres (genre_id);
@@ -149,13 +174,24 @@ SELECT
     END) AS rating_normalized_by_year,
     
     -- Estatísticas de rating samples (Metacritic) - Nulos viram 0
-    COALESCE(rs.n_samples, 0)     AS n_samples,
-    COALESCE(rs.mean_score, 0)    AS mean_score,
-    COALESCE(rs.median_score, 0)  AS median_score,
-    COALESCE(rs.stddev_score, 0)  AS stddev_score,
-    COALESCE(rs.p90_score, 0)     AS p90_score,
-    COALESCE(rs.min_score, 0)     AS min_score,
-    COALESCE(rs.max_score, 0)     AS max_score,
+    COALESCE(rf.sample_count, rs.n_samples, 0)          AS n_samples,
+    COALESCE(rf.mean_score, rs.mean_score, 0)            AS mean_score,
+    COALESCE(rf.median_score, rs.median_score, 0)        AS median_score,
+    COALESCE(rf.mode_score, 0)            AS mode_score,
+    COALESCE(rf.mode_frequency, 0)        AS mode_frequency,
+    COALESCE(rf.variance_score, 0)        AS variance_score,
+    COALESCE(rf.stddev_score, rs.stddev_score, 0)        AS stddev_score,
+    COALESCE(rf.geometric_mean_score, 0)  AS geometric_mean_score,
+    COALESCE(rf.harmonic_mean_score, 0)   AS harmonic_mean_score,
+    COALESCE(rf.p10_score, 0)             AS p10_score,
+    COALESCE(rf.p25_score, 0)             AS p25_score,
+    COALESCE(rf.p75_score, 0)             AS p75_score,
+    COALESCE(rf.p90_score, rs.p90_score, 0)             AS p90_score,
+    COALESCE(rf.iqr_score, 0)             AS iqr_score,
+    COALESCE(rf.range_score, 0)           AS range_score,
+    COALESCE(rf.min_score, rs.min_score, 0)             AS min_score,
+    COALESCE(rf.max_score, rs.max_score, 0)             AS max_score,
+    COALESCE(rf.unique_scores, 0)         AS unique_scores,
     
     -- Contagens de atributos categóricos
     (SELECT COUNT(*) FROM movie_genres     mg WHERE mg.movie_id = m.imdb_id) AS num_genres,
@@ -198,9 +234,10 @@ SELECT
     m.nominated_oscar::INT AS label -- rótulo binário (1=indicado, 0=não indicado)
 FROM movies m
 LEFT JOIN movie_box_office mbo ON m.imdb_id = mbo.movie_id
+LEFT JOIN rating_sample_features rf ON m.imdb_id = rf.movie_id
 LEFT JOIN movie_rating_stats rs ON m.imdb_id = rs.movie_id;
 
-COMMENT ON VIEW ml_training_dataset IS 'Dataset para treinamento de modelo de classificação de indicação ao Oscar. Inclui features numéricas, features derivadas (ROI, market share, z-scores, rank), estatísticas de ratings, contagens de categorias e o rótulo binário.';
+COMMENT ON VIEW ml_training_dataset IS 'Dataset para treinamento de modelo de classificação de indicação ao Oscar. Inclui features numéricas, features derivadas (ROI, market share, z-scores, rank), estatísticas de ratings (incluindo moda, variância e quantis), contagens de categorias e o rótulo binário.';
 
 -- ==============================================================================
 -- VIEWS DE SPLIT TEMPORAL (CRÍTICO PARA EVITAR DATA LEAKAGE)

@@ -231,6 +231,7 @@ def run_custom_query(query: str, params: Optional[dict] = None):
     engine = get_db_connection()
     df = pd.read_sql(query, engine, params=params)
     print(f"✅ Query returned {len(df):,} rows")
+    print(df)
     return df
 
 
@@ -307,3 +308,6 @@ if __name__ == "__main__":
     print("• run_custom_query(query) - Run any SQL query")
     print("• load_all_data() - Load everything at once")
     print("="*60)
+
+
+run_custom_query("SELECT * FROM rating_sample_features")
