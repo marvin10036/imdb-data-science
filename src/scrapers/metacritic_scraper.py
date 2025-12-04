@@ -145,6 +145,9 @@ def get_metacritic_page_from_imdb_db_id(db_id: str):
     # div[data-testid="critic-reviews-title"] > div:nth-of-type(2) > div:nth-of-type(2) a[href]
     css = 'div[data-testid="critic-reviews-title"] > div:nth-of-type(2) > div:nth-of-type(2) a[href]'
     tag = soup.select_one(css)
+    if not tag:
+        raise ValueError(f"Link do Metacritic não encontrado na página do IMDb para {db_id}")
+
     metacritic_general_url = urljoin(imdb_page_url, tag["href"])
 
     metacritic_movie_name = metacritic_general_url.split("?")[0].split("https://www.metacritic.com/movie/")[1]
