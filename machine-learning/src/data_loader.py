@@ -79,12 +79,14 @@ def test_connection():
         return False
 
 
-def load_ml_dataset(cache_csv: bool = False):
+def load_ml_dataset(cache_csv: bool = False, show_columns: bool = False, sample_rows: int | None = None):
     """
     Load the ml_training_dataset view directly from database.
     
     Args:
         cache_csv: If True, saves a cached CSV copy (default: False)
+        show_columns: If True, prints the column list for quick inspection
+        sample_rows: If set, prints the first N rows as a table (use small N to avoid flooding output)
     
     Returns:
         pandas.DataFrame: ML training dataset with all features
@@ -97,6 +99,16 @@ def load_ml_dataset(cache_csv: bool = False):
     print(f"✅ Loaded {len(df):,} movies from database")
     print(f"   Features: {len(df.columns)}")
     print(f"   Period: {df['release_year'].min()} - {df['release_year'].max()}")
+    
+    if show_columns:
+        print("   Column list:")
+        for idx, col in enumerate(df.columns, start=1):
+            print(f"     {idx:02d}. {col}")
+    
+    if sample_rows:
+        n = max(1, sample_rows)
+        print(f"\n🔎 Preview (first {n} rows):")
+        print(df.head(n).to_string(index=False))
     
     # Optional: cache to CSV for faster subsequent loads
     if cache_csv:
@@ -310,4 +322,4 @@ if __name__ == "__main__":
     print("="*60)
 
 
-run_custom_query("SELECT * FROM rating_sample_features")
+run_custom_query("SELECT * FROM ml_split_prediction_2025")

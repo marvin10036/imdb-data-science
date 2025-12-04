@@ -1,6 +1,9 @@
+import json
 import re
+from typing import Iterable, List, Set
 from urllib.parse import urljoin
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -159,3 +162,90 @@ def get_metacritic_critic_scores_from_id(imdb_id: str):
     metacritic_movie_name, metacritic_page_url = get_metacritic_page_from_imdb_db_id(imdb_id)
 
     return metacritic_movie_name, get_metacritic_critic_scores(metacritic_page_url)
+
+
+def list_missing_scores_for_prediction(
+    engine,
+    scores_json_path: str = "data/processed/movie_scores.json",
+    error_list_path: str = "data/errors/error_list_from_error_list.json",
+) -> List[str]:
+    """
+    Retorna os IMDb IDs presentes em ml_split_prediction_2025 que ainda não estão no movie_scores.json.
+    Ignora IDs listados no arquivo de erros para evitar reprocessar casos problemáticos.
+
+    Args:
+        engine: sqlalchemy engine já configurado.
+        scores_json_path: caminho para o JSON de notas coletadas.
+        error_list_path: caminho para o JSON de IDs com erro conhecidos.
+
+    Returns:
+        Lista de imdb_ids faltantes.
+    """
+    with open(scores_json_path, "r", encoding="utf-8") as f:
+        scores_data = json.load(f)
+    collected_ids: Set[str] = set(scores_data.keys())
+
+    try:
+        with open(error_list_path, "r", encoding="utf-8") as f:
+            error_data = json.load(f)
+        error_ids: Set[str] = set(error_data.keys())
+    except FileNotFoundError:
+        error_ids = set()
+
+    df_pred = pd.read_sql("SELECT imdb_id FROM ml_split_prediction_2025", engine)
+    prediction_ids: Iterable[str] = df_pred["imdb_id"].tolist()
+
+    missing = [imdb_id for imdb_id in prediction_ids if imdb_id not in collected_ids and imdb_id not in error_ids]
+    return missing
+
+
+def scrape_missing_prediction_scores(
+    engine,
+    scores_json_path: str = "data/processed/movie_scores.json",
+    error_list_path: str = "data/errors/error_list_from_error_list.json",
+) -> List[str]:
+    """
+    Faz scraping de todos os IMDb IDs de ml_split_prediction_2025 que ainda não estão no movie_scores.json.
+    IDs com erro conhecido (error_list_path) são ignorados para evitar retrabalho.
+    Atualiza o JSON de scores e registra falhas no arquivo de erros.
+
+    Args:
+        engine: sqlalchemy engine já configurado.
+        scores_json_path: caminho para o JSON de notas coletadas.
+        error_list_path: caminho para o JSON de IDs com erro conhecidos.
+
+    Returns:
+        Lista de IMDb IDs que foram coletados com sucesso.
+    """
+    with open(scores_json_path, "r", encoding="utf-8") as f:
+        scores_data = json.load(f)
+
+    try:
+        with open(error_list_path, "r", encoding="utf-8") as f:
+            error_data = json.load(f)
+    except FileNotFoundError:
+        error_data = {}
+
+    missing_ids = list_missing_scores_for_prediction(engine, scores_json_path, error_list_path)
+    collected_now: List[str] = []
+
+    for imdb_id in missing_ids:
+        try:
+            _, scores = get_metacritic_critic_scores_from_id(imdb_id)
+            if not scores:
+                raise ValueError("Scraping não retornou notas.")
+            scores_data[imdb_id] = scores
+            collected_now.append(imdb_id)
+            print(f"✅ Coletado {imdb_id} ({len(scores)} reviews)")
+        except Exception as exc:  # noqa: BLE001
+            print(f"⚠️  Falha ao coletar {imdb_id}: {exc}")
+            error_data[imdb_id] = str(exc)
+
+    # Persistir atualizações
+    with open(scores_json_path, "w", encoding="utf-8") as f:
+        json.dump(scores_data, f, ensure_ascii=False, indent=2)
+
+    with open(error_list_path, "w", encoding="utf-8") as f:
+        json.dump(error_data, f, ensure_ascii=False, indent=2)
+
+    return collected_now
