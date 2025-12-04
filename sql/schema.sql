@@ -128,16 +128,7 @@ SELECT
     m.imdb_votes,
     m.runtime_minutes,
     m.metascore,
-    mbo.budget,
-    mbo.worldwide_gross,
-    mbo.domestic_gross,
-    
-    -- Feature derivada: ROI (Return on Investment)
-    (CASE WHEN mbo.budget > 0 THEN mbo.worldwide_gross / mbo.budget ELSE NULL END) AS roi_worldwide,
-    
-    -- Feature derivada: US Market Share (% da receita que veio do mercado doméstico/EUA)
-    (CASE WHEN mbo.worldwide_gross > 0 THEN mbo.domestic_gross / mbo.worldwide_gross ELSE NULL END) AS us_market_share,
-    
+
     -- Feature derivada: Box Office Rank in Year (posição relativa de bilheteria no ano)
     RANK() OVER (PARTITION BY m.release_year ORDER BY mbo.worldwide_gross DESC NULLS LAST) AS box_office_rank_in_year,
     
@@ -157,14 +148,14 @@ SELECT
         ELSE NULL 
     END) AS rating_normalized_by_year,
     
-    -- Estatísticas de rating samples (Metacritic)
-    rs.n_samples,
-    rs.mean_score,
-    rs.median_score,
-    rs.stddev_score,
-    rs.p90_score,
-    rs.min_score,
-    rs.max_score,
+    -- Estatísticas de rating samples (Metacritic) - Nulos viram 0
+    COALESCE(rs.n_samples, 0)     AS n_samples,
+    COALESCE(rs.mean_score, 0)    AS mean_score,
+    COALESCE(rs.median_score, 0)  AS median_score,
+    COALESCE(rs.stddev_score, 0)  AS stddev_score,
+    COALESCE(rs.p90_score, 0)     AS p90_score,
+    COALESCE(rs.min_score, 0)     AS min_score,
+    COALESCE(rs.max_score, 0)     AS max_score,
     
     -- Contagens de atributos categóricos
     (SELECT COUNT(*) FROM movie_genres     mg WHERE mg.movie_id = m.imdb_id) AS num_genres,
@@ -173,6 +164,35 @@ SELECT
     (SELECT COUNT(*) FROM movie_people     mp WHERE mp.movie_id = m.imdb_id AND mp.role = 'director') AS num_directors,
     (SELECT COUNT(*) FROM movie_people     mp WHERE mp.movie_id = m.imdb_id AND mp.role = 'writer')   AS num_writers,
     (SELECT COUNT(*) FROM movie_people     mp WHERE mp.movie_id = m.imdb_id AND mp.role = 'cast')    AS num_cast,
+    
+    -- Feature 1: Pedigree (Diretor) - Quantos filmes anteriores indicados o diretor tem
+    (
+        SELECT COUNT(DISTINCT m2.imdb_id)
+        FROM movie_people mp1
+        JOIN movie_people mp2 ON mp1.person_id = mp2.person_id
+        JOIN movies m2 ON mp2.movie_id = m2.imdb_id
+        WHERE mp1.movie_id = m.imdb_id
+          AND mp1.role = 'director'
+          AND m2.release_year < m.release_year
+          AND m2.nominated_oscar = TRUE
+    ) AS director_prev_nominations,
+
+    -- Feature 1: Pedigree (Elenco) - Quantos filmes anteriores indicados o elenco tem
+    (
+        SELECT COUNT(DISTINCT m2.imdb_id)
+        FROM movie_people mp1
+        JOIN movie_people mp2 ON mp1.person_id = mp2.person_id
+        JOIN movies m2 ON mp2.movie_id = m2.imdb_id
+        WHERE mp1.movie_id = m.imdb_id
+          AND mp1.role = 'cast'
+          AND m2.release_year < m.release_year
+          AND m2.nominated_oscar = TRUE
+    ) AS cast_prev_nominations,
+
+    -- Feature 2: Buzz (Gêneros Oscar-Bait)
+    (CASE WHEN EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON mg.genre_id = g.id WHERE mg.movie_id = m.imdb_id AND g.name = 'Drama') THEN 1 ELSE 0 END) AS is_drama,
+    (CASE WHEN EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON mg.genre_id = g.id WHERE mg.movie_id = m.imdb_id AND g.name = 'Biography') THEN 1 ELSE 0 END) AS is_biography,
+    (CASE WHEN EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON mg.genre_id = g.id WHERE mg.movie_id = m.imdb_id AND g.name = 'History') THEN 1 ELSE 0 END) AS is_history,
     
     -- Rótulo (label) para ML
     m.nominated_oscar::INT AS label -- rótulo binário (1=indicado, 0=não indicado)
