@@ -14,7 +14,6 @@ if str(ROOT) not in sys.path:
 
 from src.scrapers.metacritic_scraper import (  # noqa: E402
     get_metacritic_critic_scores_from_id,
-    list_missing_scores_for_prediction,
 )
 
 
@@ -24,18 +23,24 @@ def get_engine():
 
 
 if __name__ == "__main__":
-    engine = get_engine()
-    missing_ids = list_missing_scores_for_prediction(engine)
+    # Carregar lista de erros e tentar novamente apenas esses IDs
+    error_list_path = "data/errors/error_list_from_error_list.json"
+    try:
+        with open(error_list_path, "r", encoding="utf-8") as f:
+            error_data = json.load(f)
+    except FileNotFoundError:
+        error_data = {}
 
-    if not missing_ids:
-        print("Nenhum ID faltante em ml_split_prediction_2025 para scraping.")
+    retry_ids = list(error_data.keys())
+
+    if not retry_ids:
+        print("Nenhum ID em error_list_path para reprocessar.")
         exit(0)
 
-    print(f"Encontrados {len(missing_ids)} IDs faltantes para 2025. Iniciando scraping paralelo.")
+    print(f"Reprocessando {len(retry_ids)} IDs que falharam anteriormente (parallel).")
     now = datetime.now()
 
     scores_json_path = "data/processed/movie_scores.json"
-    error_list_path = "data/errors/error_list_from_error_list.json"
 
     try:
         with open(scores_json_path, "r", encoding="utf-8") as f:
@@ -43,14 +48,8 @@ if __name__ == "__main__":
     except FileNotFoundError:
         scores_data = {}
 
-    try:
-        with open(error_list_path, "r", encoding="utf-8") as f:
-            error_data = json.load(f)
-    except FileNotFoundError:
-        error_data = {}
-
     collected = []
-    max_workers = min(8, len(missing_ids))
+    max_workers = min(8, len(retry_ids))
 
     def fetch_one(imdb_id: str):
         _, scores = get_metacritic_critic_scores_from_id(imdb_id)
@@ -59,7 +58,7 @@ if __name__ == "__main__":
         return imdb_id, scores
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(fetch_one, imdb_id): imdb_id for imdb_id in missing_ids}
+        futures = {executor.submit(fetch_one, imdb_id): imdb_id for imdb_id in retry_ids}
         for future in as_completed(futures):
             imdb_id = futures[future]
             try:
@@ -67,6 +66,8 @@ if __name__ == "__main__":
                 scores_data[imdb_id] = scores
                 collected.append(imdb_id)
                 print(f"✅ {imdb_id}: {len(scores)} reviews")
+                # Remover do error list se agora funcionou
+                error_data.pop(imdb_id, None)
             except Exception as exc:  # noqa: BLE001
                 print(f"⚠️  Falha ao coletar {imdb_id}: {exc}")
                 error_data[imdb_id] = str(exc)
