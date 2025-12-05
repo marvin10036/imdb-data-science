@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from src.processors.scores_processor import features_from_scores_map
+from data_base_construction.data_collection_scripts.scores_processor import features_from_scores_map
 from src.scrapers.metacritic_scraper import get_metacritic_critic_scores_from_id
 import pandas as pd
 from datetime import datetime
