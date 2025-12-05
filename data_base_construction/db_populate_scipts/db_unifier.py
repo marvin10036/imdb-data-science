@@ -17,7 +17,7 @@ from pandas import read_csv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from tqdm import tqdm
 
-from src.scrapers.metacritic_scraper import get_metacritic_critic_scores_from_id
+from data_collection_scripts.metacritic_scraper import get_metacritic_critic_scores_from_id
 
 # ============================================================================
 # CONFIGURAÇÕES
